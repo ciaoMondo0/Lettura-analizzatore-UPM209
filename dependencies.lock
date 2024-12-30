@@ -1,0 +1,29 @@
+dependencies:
+  espressif/esp-modbus:
+    component_hash: 2168e6b4cbda4d0281a2a2d1a40a3848e231473b2690d73217e3600fd2c98c12
+    dependencies:
+    - name: idf
+      registry_url: https://components.espressif.com
+      require: private
+      version: '>=4.3'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.0.16
+  idf:
+    source:
+      type: idf
+    version: 5.3.1
+  mb_example_common:
+    dependencies: []
+    source:
+      path: C:\Users\User\esp\v5.3.1\esp-idf\examples\protocols\modbus\mb_example_common
+      type: local
+    version: '*'
+direct_dependencies:
+- espressif/esp-modbus
+- idf
+- mb_example_common
+manifest_hash: 32632551e6f36d299af0964da1db82a7051128dd53f475ebb4cc0776786a7bbb
+target: esp32s3
+version: 2.0.0
