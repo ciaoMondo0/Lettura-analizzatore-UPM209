@@ -54,7 +54,7 @@ modbus_register registers[] = {
 
 // Funzione per convertire quattro registri Modbus (2 word) in IEEE 754
 float modbus_16bit_register_to_float(uint16_t a, uint16_t b, float scala) {
-    // Combina i registri in un uint32_t 
+    // Combina i registri in un uint32_t
     uint32_t combined = ((uint32_t)a << 16) | b;
 
     // Applica la scala
@@ -63,10 +63,10 @@ float modbus_16bit_register_to_float(uint16_t a, uint16_t b, float scala) {
 
 // Funzione per convertire quattro registri Modbus (4 word) in double
 double modbus_16bit_register_to_double(uint16_t a, uint16_t b, uint16_t c, uint16_t d, float scala) {
-    // Combina i registri in un uint64_t 
-    uint64_t combined = ((uint64_t)a << 48) | 
-                        ((uint64_t)b << 32) | 
-                        ((uint64_t)c << 16) | 
+    // Combina i registri in un uint64_t
+    uint64_t combined = ((uint64_t)a << 48) |
+                        ((uint64_t)b << 32) |
+                        ((uint64_t)c << 16) |
                         (uint64_t)d;
 
     // Applica la scala
@@ -136,15 +136,16 @@ static esp_err_t master_init(void) {
 
 // Legge registri e salva su JSON
 static void registers_to_json(void) {
-   
+
     esp_err_t err;
 
     cJSON *json_root = cJSON_CreateObject();
 
     for (size_t i = 0; i < NUM_REGISTERS; i++) {
         modbus_register reg = registers[i];
-        uint16_t register_data[4] = {0}; // Buffer per i dati Modbus 
+        uint16_t register_data[4] = {0}; // Buffer per i dati Modbus
 
+        //Struttura della richiesta Modbus
         mb_param_request_t request = {
             .slave_addr = MB_SLAVE_ADDR,
             .command = reg.command,
@@ -162,9 +163,9 @@ static void registers_to_json(void) {
                 // Aggiunta dei valori al JSON
                 cJSON *item = cJSON_CreateObject();
                 cJSON_AddNumberToObject(item, "value", value_double);
-                cJSON_AddStringToObject(item, "unit", reg.unita); 
+                cJSON_AddStringToObject(item, "unit", reg.unita);
 
-                cJSON_AddItemToObject(json_root, reg.nome, item); 
+                cJSON_AddItemToObject(json_root, reg.nome, item);
                 ESP_LOGI(TAG, "%s: %.6f %s", reg.nome, value_double, reg.unita);
             } else if (reg.reg_size == 2) {
                 // Unione di 2 word in un uint32_t e conversione a float
@@ -172,9 +173,9 @@ static void registers_to_json(void) {
 
                 cJSON *item = cJSON_CreateObject();
                 cJSON_AddNumberToObject(item, "value", value_float);
-                cJSON_AddStringToObject(item, "unit", reg.unita); 
+                cJSON_AddStringToObject(item, "unit", reg.unita);
 
-                cJSON_AddItemToObject(json_root, reg.nome, item); 
+                cJSON_AddItemToObject(json_root, reg.nome, item);
                 ESP_LOGI(TAG, "%s: %.3f %s", reg.nome, value_float, reg.unita);
             } else {
                 // Registro a 1 word, conversione diretta a float
@@ -182,57 +183,54 @@ static void registers_to_json(void) {
 
                 cJSON *item = cJSON_CreateObject();
                 cJSON_AddNumberToObject(item, "value", value_float);
-                cJSON_AddStringToObject(item, "unit", reg.unita); 
+                cJSON_AddStringToObject(item, "unit", reg.unita);
 
-                cJSON_AddItemToObject(json_root, reg.nome, item); 
+                cJSON_AddItemToObject(json_root, reg.nome, item);
                 ESP_LOGI(TAG, "%s: %.3f %s", reg.nome, value_float, reg.unita);
             }
         } else {
-            ESP_LOGE(TAG, "Errore lettura registro %s. Codice errore: %s", reg.nome, esp_err_to_name(err)); 
+            ESP_LOGE(TAG, "Errore lettura registro %s. Codice errore: %s", reg.nome, esp_err_to_name(err));
         }
 
         vTaskDelay(pdMS_TO_TICKS(500)); // Ritardo tra letture
     }
 
-    // Scrittura JSON su file
-    char *json_string = cJSON_PrintUnformatted(json_root);
-    if (json_string != NULL) {
-        FILE *file = fopen("/spiffs/data_monofase.json", "w");
-        if (file) {
-            fwrite(json_string, sizeof(char), strlen(json_string), file);
-            fclose(file);
-            ESP_LOGI(TAG, "File JSON salvato correttamente.");
-        } else {
-            ESP_LOGE(TAG, "Errore nella scrittura del file JSON.");
+    // Crea una stringa JSON dal contenuto di json_root
+        char *json_string = cJSON_PrintUnformatted(json_root);
+        if (json_string != NULL) {
+            FILE *file = fopen("/spiffs/data_monofase.json", "w");  // Apre il file JSON in modalità scrittura
+            if (file) {
+                // Scrive la stringa JSON nel file
+                fwrite(json_string, sizeof(char), strlen(json_string), file);
+                fclose(file);
+                ESP_LOGI(TAG, "File JSON salvato correttamente.");
+            } else {
+                ESP_LOGE(TAG, "Errore nella scrittura del file JSON.");
+            }
+            free(json_string);  // Libera la memoria allocata per la stringa JSON
         }
-        free(json_string);
-    }
 
-    cJSON_Delete(json_root); 
+        cJSON_Delete(json_root);  // Libera la memoria allocata per l'oggetto JSON
 }
 
 static void read_json_file(void) {
-    FILE *file = fopen("/spiffs/data_monofase.json", "r");
-   
-        char buffer[2048];
-        size_t bytes = fread(buffer, 1, 2047, file);
+    FILE *file = fopen("/spiffs/data_monofase.json", "r"); //Apre il file JSON in modalità lettura
+    
+    char buffer[2048];  // Buffer per contenere il contenuto del file
+    size_t bytes = fread(buffer, 1, 2047, file);  // Legge fino a 2047 byte dal file JSON
+    buffer[bytes] = '\0';  // Aggiunge un terminatore nullo alla fine per trattarlo come una stringa
+    printf("Contenuto del file JSON:\n%s\n", buffer); 
 
-            buffer[bytes] = '\0'; 
-            printf("Contenuto del file JSON:\n%s\n", buffer);
-
-             fclose(file);
+    fclose(file);  // Chiude il file
 
 }
-
 
 
 void app_main(void) {
     init_spiffs();       // Inizializza SPIFFS
     master_init();       // Inizializza Modbus Master
-
-  read_json_file();
-
-
+ read_json_file();
+    
     while (1) {
         registers_to_json();
         vTaskDelay(pdMS_TO_TICKS(5000)); // Lettura ogni 5 secondi
