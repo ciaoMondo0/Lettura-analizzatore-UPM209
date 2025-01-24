@@ -14,6 +14,11 @@
 #define MB_UART_RXD         (8)           // Pin RX RS485
 #define MB_UART_RTS         (4)           // Pin RTS per abilitazione trasmissione
 
+
+#define WIFI_SSID ""
+#define WIFI_PASS ""
+#define OTA_URL   ""
+
 static const char *TAG = "UPM209"; // Tag per log Modbus
 
 // Struttura registri Modbus
@@ -50,6 +55,51 @@ modbus_register registers[] = {
     { "Frequenza (F)", "mHz", 0x0072, 2, 0x04, 0.001 },
     { "Energia Attiva Importata (kWh)", "Wh", 0x0400, 4, 0x04, 0.0001 }
 };
+
+static void wifi_init(void) {
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_t *netif = esp_netif_create_default_wifi_sta();
+    assert(netif);
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = WIFI_SSID,
+            .password = WIFI_PASS,
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+        },
+    };
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    ESP_LOGI(TAG, "Connesso a Wi-Fi: %s", WIFI_SSID);
+}
+
+// Funzione per eseguire l'aggiornamento OTA
+static void ota_task(void *pvParameter) {
+    ESP_LOGI(TAG, "Inizio aggiornamento OTA da %s", OTA_URL);
+
+    esp_http_client_config_t ota_client_config = {
+        .url = OTA_URL,
+        .cert_pem = NULL,
+    };
+
+    esp_err_t ret = esp_https_ota(&ota_client_config);
+    if (ret == ESP_OK) {
+        ESP_LOGI(TAG, "Aggiornamento OTA completato. Riavvio...");
+        esp_restart();
+    } else {
+        ESP_LOGE(TAG, "Aggiornamento OTA fallito: %s", esp_err_to_name(ret));
+    }
+
+    vTaskDelete(NULL); // Termina il task OTA
+}
+
 
 
 // Funzione per convertire quattro registri Modbus (2 word) in IEEE 754
@@ -227,6 +277,10 @@ static void read_json_file(void) {
 
 
 void app_main(void) {
+
+
+    wifi_init();
+    xTaskCreate(&ota_task, "ota_task", 8192, NULL, 5, NULL);
     init_spiffs();       // Inizializza SPIFFS
     master_init();       // Inizializza Modbus Master
  read_json_file();
