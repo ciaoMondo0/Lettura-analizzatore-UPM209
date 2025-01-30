@@ -39,7 +39,8 @@ idf.py build flash monitor
 ### Configurazione dei Parametri
 
 Modifica il file main.c per inserire le credenziali Wi-Fi e l'URL OTA:
-
+```bash
 #define WIFI_SSID "TuoSSID"
 #define WIFI_PASS "TuaPassword"
 #define OTA_URL   "http://tuoserver/firmware.bin"
+```
