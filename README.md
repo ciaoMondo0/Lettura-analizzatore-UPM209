@@ -35,7 +35,7 @@ Per compilare il firmware, usa ESP-IDF o PlatformIO.
 idf.py set-target esp32s3
 idf.py menuconfig   # Configura Wi-Fi e OTA
 idf.py build flash monitor
-
+```
 ### Configurazione dei Parametri
 
 Modifica il file main.c per inserire le credenziali Wi-Fi e l'URL OTA:
