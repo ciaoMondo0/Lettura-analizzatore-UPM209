@@ -1,3 +1,54 @@
+## English
+
+# Energy Monitoring with ESP32 and UPM209
+
+## Description
+
+This project allows real-time monitoring of the energy data from the UPM209 meter using an ESP32S3. The data is acquired via RS485 with the Modbus RTU protocol, saved in JSON format on the device's SPIFFS memory, and can be read later.
+
+## Required Hardware
+
+- **ESP32S3**: the main microcontroller for managing Modbus communication and data storage.
+- **UPM209**: three-phase energy meter with Modbus RTU support.
+- **RS485 Module**: interface for communication with the UPM209 meter.
+- **SPIFFS Memory**: used to save the acquired data in JSON format.
+- **Wi-Fi**: for potential OTA updates.
+
+## Features
+
+- Real-time reading of electrical parameters from the UPM209 via Modbus RTU.
+- Saving data in JSON format on the ESP32S3's SPIFFS memory.
+- Ability to read and display the saved data.
+- Wi-Fi connectivity for future expansions and firmware updates via OTA.
+
+## Support
+
+This project supports the ESP32S3 with the ESP-IDF development environment. It can be adapted to other ESP32 variants or devices compatible with Modbus RTU. For any issues or support requests, it is recommended to consult the official documentation of ESP-IDF and the libraries used.
+
+---
+
+## Development Environment Setup
+
+To compile the firmware, use ESP-IDF or PlatformIO.
+
+### ESP-IDF
+
+```bash
+idf.py set-target esp32s3
+idf.py menuconfig   # Configure Wi-Fi and OTA
+idf.py build flash monitor
+```
+
+### Configuration Parameters
+
+Modify the `main.c` file to insert your Wi-Fi credentials and OTA URL:
+```c
+#define WIFI_SSID "YourSSID"
+#define WIFI_PASS "YourPassword"
+#define OTA_URL   "http://yourserver/firmware.bin"
+```
+
+## Italian
 # Monitoraggio Energetico con ESP32 e UPM209
 
 ## Descrizione
